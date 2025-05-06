@@ -65,7 +65,7 @@ vector<Token> tokenize(string &html)
                 tokens.push_back({TokenType::OPEN_TAG, tagName});
                 while (i < html.size() && html[i] != '>')
                 {
-                    while (i < html.size() && html[i] != ' ')
+                    while (i < html.size() && isspace(html[i]))
                         i++;
                     string att;
                     while (i < html.size() && html[i] != '>' && html[i] != '=')
