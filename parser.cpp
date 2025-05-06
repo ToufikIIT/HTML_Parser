@@ -121,6 +121,7 @@ Node *parse(vector<Token> &tokens)
     int i = 0;
     while (i < tokens.size())
     {
+        Token& token = tokens[i];
         if (token.type == TokenType::OPEN_TAG)
         {
             Node *element = new Node{NodeType::ELEMENT, token.value};
@@ -130,7 +131,62 @@ Node *parse(vector<Token> &tokens)
         else if (token.type == TokenType::ATTRIBUTE)
         {
             if (!stack.empty())
-            
+            {
+                string att = token.value;
+                int equal_pos = att.find('=');
+                if (equal_pos != string::npos)
+                {
+                    string key = att.substr(0, equal_pos);
+                    string value = att.substr(equal_pos + 1);
+                    if (value.front() == '\"')
+                    {
+                        value = value.substr(1, value.size() - 2);
+                    }
+                    stack.back()->attributes.push_back({key, value});
+                }
+            }
+            i++;
+        }
+        else if (token.type == TokenType::TEXT)
+        {
+            Node *textNode = new Node{NodeType::TEXT};
+            textNode->textContent = token.value;
+            if (!stack.empty())
+            {
+                stack.back()->children.push_back(textNode);
+            }
+            i++;
+        }else if (token.type == TokenType::CLOSE_TAG) {
+            Node* node = stack.back();
+            stack.pop_back();
+            if (!stack.empty()) {
+                stack.back()->children.push_back(node);
+            } else {
+                root = node;
+            }
+            i++;
         }
     }
+    return root;
+}
+void printNode(Node* node, int depth = 0) {
+    string indent(depth * 2, ' ');
+    if (node->type == NodeType::ELEMENT) {
+        cout << indent << "Element: " << node->tagName << "\n";
+        for (auto attr : node->attributes) {
+            cout << indent << "  Attribute: " << attr.first << " = " << attr.second << "\n";
+        }
+        for (auto child : node->children) {
+            printNode(child, depth + 1);
+        }
+    } else if (node->type == NodeType::TEXT) {
+        cout << indent << "Text: " << node->textContent << "\n";
+    }
+}
+int main() {
+    string html = "<div><p class=\"title\">Hello</p><span>World</span></div>";
+    auto tokens = tokenize(html);
+    Node* root = parse(tokens);
+    printNode(root);
+    return 0;
 }
